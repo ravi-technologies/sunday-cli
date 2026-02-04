@@ -1,0 +1,28 @@
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - gosimple
+    - ineffassign
+    - typecheck
+    - gofmt
+    - goimports
+    - misspell
+    - revive
+
+linters-settings:
+  errcheck:
+    check-blank: true
+  revive:
+    rules:
+      - name: exported
+        severity: warning
+
+issues:
+  exclude-rules:
+    # Allow unchecked errors in test files
+    - path: _test\.go
+      linters:
+        - errcheck
