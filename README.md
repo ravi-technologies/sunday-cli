@@ -1,10 +1,49 @@
 # Sunday CLI
 
-Command-line interface for the Sunday 2FA backend service.
+Command-line interface for AI agents to access their inbox (email and SMS).
 
 ## Overview
 
-Sunday CLI provides secure access to your Sunday 2FA account from the terminal. View your inbox messages, manage authentication, and integrate with scripts using JSON output.
+Sunday CLI enables AI agents to receive and read communications on dedicated phone numbers and email addresses. This allows agents to:
+
+- **Receive OTPs and verification codes** to authenticate with websites and services
+- **Sign up for services** using the assigned phone number and email address
+- **Read incoming messages** from services, notifications, and confirmations
+- **Automate workflows** that require email/SMS verification
+
+Each agent gets their own dedicated inbox with:
+- A unique phone number for SMS
+- A unique email address for email
+
+## Use Cases
+
+### Receiving OTPs for Website Login
+```bash
+# Check for recent SMS messages containing verification codes
+sunday inbox sms --unread --json | jq '.[0].messages[].body'
+
+# Get the latest email with OTP
+sunday inbox email --unread
+```
+
+### Signing Up for Services
+When filling out registration forms:
+1. Use `sunday auth status --json` to get your assigned email
+2. Use the phone number from your Sunday account for SMS verification
+3. Monitor `sunday inbox` for the verification code
+4. Complete the signup process
+
+### Automated Verification Flows
+```bash
+# Poll for new messages in JSON format (ideal for automation)
+sunday inbox --unread --json
+
+# Filter for SMS only
+sunday inbox --type sms --unread --json
+
+# Filter for email only
+sunday inbox --type email --unread --json
+```
 
 ## Installation
 
@@ -30,12 +69,17 @@ Download the latest release for your platform from the releases page.
 
 2. **Check your inbox:**
    ```bash
-   sunday inbox
+   sunday inbox list
    ```
 
 3. **View only unread messages:**
    ```bash
-   sunday inbox --unread
+   sunday inbox list --unread
+   ```
+
+4. **Get messages in JSON format (for automation):**
+   ```bash
+   sunday inbox list --json
    ```
 
 ## Commands
@@ -46,40 +90,84 @@ Download the latest release for your platform from the releases page.
 |---------|-------------|
 | `sunday auth login` | Authenticate via browser OAuth flow |
 | `sunday auth logout` | Clear stored credentials |
-| `sunday auth status` | Show current authentication status |
+| `sunday auth status` | Show current authentication status and user email |
 
 ### Inbox
 
 | Command | Description |
 |---------|-------------|
-| `sunday inbox` | List all inbox messages |
-| `sunday inbox --type email` | Filter by message type (email/sms) |
-| `sunday inbox --direction inbound` | Filter by direction (inbound/outbound) |
-| `sunday inbox --unread` | Show only unread messages |
+| `sunday inbox list` | List all inbox messages (combined SMS + email) |
+| `sunday inbox list --type email` | Filter by message type (email/sms) |
+| `sunday inbox list --type sms` | Filter to SMS messages only |
+| `sunday inbox list --direction incoming` | Filter by direction (incoming/outgoing) |
+| `sunday inbox list --unread` | Show only unread messages |
 | `sunday inbox email` | List email threads |
-| `sunday inbox email <thread-id>` | View specific email thread |
+| `sunday inbox email <thread-id>` | View specific email thread with all messages |
 | `sunday inbox sms` | List SMS conversations |
-| `sunday inbox sms <conversation-id>` | View specific SMS conversation |
+| `sunday inbox sms <conversation-id>` | View specific SMS conversation with all messages |
 
 ### Global Flags
 
 | Flag | Description |
 |------|-------------|
-| `--json` | Output in JSON format for scripting |
+| `--json` | Output in JSON format (recommended for AI agents) |
 | `--help` | Show help for any command |
 | `--version` | Show version information |
+
+## JSON Output for AI Agents
+
+All commands support the `--json` flag, which outputs structured JSON ideal for programmatic parsing:
+
+```bash
+# List all unread messages as JSON
+sunday inbox list --unread --json
+
+# Parse with jq to extract OTP from SMS
+sunday inbox sms --json | jq -r '.[0].messages[] | select(.body | test("[0-9]{6}")) | .body'
+
+# Get the most recent email subject
+sunday inbox email --json | jq -r '.[0].subject'
+```
+
+### JSON Response Structure
+
+**Inbox List:**
+```json
+[
+  {
+    "type": "sms",
+    "from": "+1234567890",
+    "preview": "Your verification code is 123456",
+    "date": "2024-01-15T10:30:00Z",
+    "is_read": false
+  }
+]
+```
+
+**SMS Conversation Detail:**
+```json
+{
+  "conversation_id": "conv_123",
+  "from_number": "+1234567890",
+  "sunday_number": "+0987654321",
+  "messages": [
+    {
+      "direction": "incoming",
+      "body": "Your verification code is 123456",
+      "timestamp": "2024-01-15T10:30:00Z"
+    }
+  ]
+}
+```
 
 ## Configuration
 
 Credentials are stored in `~/.sunday/config.json` with secure file permissions (0600).
 
-## JSON Output
-
-All commands support `--json` flag for script integration:
-
-```bash
-sunday inbox --json | jq '.[] | select(.is_read == false)'
-```
+The config file contains:
+- Access token (auto-refreshes when expired)
+- Refresh token
+- User email address
 
 ## Development
 
@@ -91,8 +179,11 @@ sunday inbox --json | jq '.[] | select(.is_read == false)'
 ### Building
 
 ```bash
-# Build with API URL
+# Build with API URL (required)
 make build API_URL=https://api.sunday.example.com
+
+# Build for all platforms
+make build-all API_URL=https://api.sunday.example.com
 
 # Run tests
 make test
