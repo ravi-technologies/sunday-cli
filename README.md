@@ -28,10 +28,11 @@ sunday inbox email --unread
 
 ### Signing Up for Services
 When filling out registration forms:
-1. Use `sunday auth status --json` to get your assigned email
-2. Use the phone number from your Sunday account for SMS verification
-3. Monitor `sunday inbox` for the verification code
-4. Complete the signup process
+1. Use `sunday get email --json` to get your assigned email address
+2. Use `sunday get phone --json` to get your assigned phone number
+3. Fill out the registration form with these credentials
+4. Monitor `sunday inbox list --unread --json` for the verification code
+5. Complete the signup process
 
 ### Automated Verification Flows
 ```bash
@@ -90,9 +91,16 @@ Download the latest release for your platform from the releases page.
 |---------|-------------|
 | `sunday auth login` | Authenticate via browser OAuth flow |
 | `sunday auth logout` | Clear stored credentials |
-| `sunday auth status` | Show current authentication status and user email |
+| `sunday auth status` | Show current authentication status |
 
-### Inbox
+### Resources
+
+| Command | Description |
+|---------|-------------|
+| `sunday get email` | Get your assigned Sunday email address |
+| `sunday get phone` | Get your assigned Sunday phone number |
+
+### Inbox (grouped by conversation/thread)
 
 | Command | Description |
 |---------|-------------|
@@ -105,6 +113,17 @@ Download the latest release for your platform from the releases page.
 | `sunday inbox email <thread-id>` | View specific email thread with all messages |
 | `sunday inbox sms` | List SMS conversations |
 | `sunday inbox sms <conversation-id>` | View specific SMS conversation with all messages |
+
+### Messages (flat list of individual messages)
+
+| Command | Description |
+|---------|-------------|
+| `sunday message email` | List all email messages |
+| `sunday message email <message-id>` | View specific email message by ID |
+| `sunday message email --unread` | List only unread email messages |
+| `sunday message sms` | List all SMS messages |
+| `sunday message sms <message-id>` | View specific SMS message by ID |
+| `sunday message sms --unread` | List only unread SMS messages |
 
 ### Global Flags
 
