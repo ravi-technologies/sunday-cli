@@ -1,4 +1,4 @@
-.PHONY: build build-all test test-coverage lint lint-fix clean deps
+.PHONY: build build-all install test test-coverage lint lint-fix clean deps
 
 # Module and version info
 MODULE := github.com/ravi-technologies/sunday-cli
@@ -24,6 +24,9 @@ LDFLAGS := -ldflags "\
 
 build:
 	go build $(LDFLAGS) -o bin/sunday ./cmd/sunday
+
+install:
+	go install $(LDFLAGS) ./cmd/sunday
 
 build-all:
 	GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o bin/sunday-darwin-amd64 ./cmd/sunday

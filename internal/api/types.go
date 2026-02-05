@@ -148,3 +148,49 @@ type SMSMessage struct {
 type APIError struct {
 	Detail string `json:"detail"`
 }
+
+// SundayPhone represents the user's assigned Sunday phone number.
+type SundayPhone struct {
+	ID          int       `json:"id"`
+	PhoneNumber string    `json:"phone_number"`
+	Provider    string    `json:"provider"`
+	CreatedDt   time.Time `json:"created_dt"`
+}
+
+// SundayEmail represents the user's assigned Sunday email address.
+type SundayEmail struct {
+	ID        int       `json:"id"`
+	Email     string    `json:"email"`
+	CreatedDt time.Time `json:"created_dt"`
+}
+
+// SundayPhoneMessage represents an individual SMS message.
+type SundayPhoneMessage struct {
+	ID          int       `json:"id"`
+	URL         string    `json:"url"`
+	FromNumber  string    `json:"from_number"`
+	ToNumber    string    `json:"to_number"`
+	Body        string    `json:"body"`
+	MessageSID  string    `json:"message_sid"`
+	SundayPhone string    `json:"sunday_phone"`
+	Direction   string    `json:"direction"`
+	IsRead      bool      `json:"is_read"`
+	CreatedDt   time.Time `json:"created_dt"`
+}
+
+// SundayEmailMessage represents an individual email message.
+type SundayEmailMessage struct {
+	ID          int       `json:"id"`
+	URL         string    `json:"url"`
+	FromEmail   string    `json:"from_email"`
+	ToEmail     string    `json:"to_email"`
+	CC          string    `json:"cc"`
+	Subject     string    `json:"subject"`
+	TextContent string    `json:"text_content"`
+	HTMLContent string    `json:"html_content"`
+	Direction   string    `json:"direction"`
+	IsRead      bool      `json:"is_read"`
+	MessageID   string    `json:"message_id"`
+	ThreadID    string    `json:"thread_id"`
+	CreatedDt   time.Time `json:"created_dt"`
+}
