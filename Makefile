@@ -1,4 +1,4 @@
-.PHONY: build build-all install test test-coverage lint lint-fix clean deps
+.PHONY: build build-all install test test-coverage lint lint-fix clean deps _require-api-url
 
 # Module and version info
 MODULE := github.com/ravi-technologies/sunday-cli
@@ -6,12 +6,7 @@ VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev
 COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-# API URL must be provided at build time
-ifndef API_URL
-  $(error API_URL is required. Usage: make build API_URL=https://api.sunday.app)
-endif
-
-# ldflags for build-time variable injection
+# API URL must be provided at build time for build targets
 LDFLAGS := -ldflags "\
 	-X '$(MODULE)/internal/version.Version=$(VERSION)' \
 	-X '$(MODULE)/internal/version.Commit=$(COMMIT)' \
@@ -21,6 +16,11 @@ LDFLAGS := -ldflags "\
 # ----------------
 #    Build
 # ----------------
+
+build install build-all: _require-api-url
+
+_require-api-url:
+	@test -n "$(API_URL)" || (echo "Error: API_URL is required. Usage: make build API_URL=https://api.sunday.app" && exit 1)
 
 build:
 	go build $(LDFLAGS) -o bin/sunday ./cmd/sunday
