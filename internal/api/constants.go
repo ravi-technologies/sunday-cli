@@ -20,4 +20,5 @@ const (
 	PathEmail         = "/api/v1/email/"
 	PathMessages      = "/api/v1/messages/"
 	PathEmailMessages = "/api/v1/email-messages/"
+	PathEncryption    = "/api/v1/encryption/"
 )
