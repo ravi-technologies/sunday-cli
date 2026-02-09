@@ -1,9 +1,9 @@
 package cli
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/ravi-technologies/sunday-cli/internal/api"
 	"github.com/ravi-technologies/sunday-cli/internal/output"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -29,6 +29,16 @@ var inboxListCmd = &cobra.Command{
 		messages, err := client.ListInbox(inboxType, inboxDirection, inboxUnread)
 		if err != nil {
 			return err
+		}
+
+		kp, err := ensureKeyPair()
+		if err != nil {
+			return err
+		}
+
+		for i := range messages {
+			messages[i].Subject = tryDecrypt(messages[i].Subject, kp)
+			messages[i].Body = tryDecrypt(messages[i].Body, kp)
 		}
 
 		if jsonOutput {

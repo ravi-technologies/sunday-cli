@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os/exec"
 	"runtime"
@@ -9,6 +10,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/ravi-technologies/sunday-cli/internal/api"
 	"github.com/ravi-technologies/sunday-cli/internal/config"
+	"github.com/ravi-technologies/sunday-cli/internal/crypto"
 	"github.com/ravi-technologies/sunday-cli/internal/output"
 )
 
@@ -99,6 +101,12 @@ func (d *DeviceFlow) Run() error {
 			}
 
 			output.Current.PrintMessage(fmt.Sprintf("Authenticated as %s", tokenResp.User.Email))
+
+			// Prompt for PIN to unlock E2E decryption for this session.
+			if err := d.unlockEncryption(cfg); err != nil {
+				return fmt.Errorf("encryption unlock failed: %w", err)
+			}
+
 			return nil
 		default:
 			return fmt.Errorf("authentication error: %s", errCode)
@@ -106,6 +114,46 @@ func (d *DeviceFlow) Run() error {
 	}
 
 	return fmt.Errorf("authentication timed out")
+}
+
+// unlockEncryption fetches the user's encryption metadata, prompts for their
+// PIN, verifies it, and persists the derived private key in the config file
+// so subsequent commands can decrypt without re-prompting.
+func (d *DeviceFlow) unlockEncryption(cfg *config.Config) error {
+	meta, err := d.client.GetEncryptionMeta()
+	if err != nil {
+		return fmt.Errorf("fetching encryption metadata: %w", err)
+	}
+
+	if meta.PublicKey == "" {
+		// User hasn't completed PIN setup on the dashboard yet.
+		// This is OK — CLI will error on commands that need decryption.
+		fmt.Println("\nEncryption not set up yet. Complete PIN setup on the dashboard to enable E2E decryption.")
+		return nil
+	}
+
+	fmt.Println()
+	kp, err := crypto.GetOrPromptKeyPair(meta.Salt, meta.Verifier)
+	if err != nil {
+		return err
+	}
+
+	// Verify that the locally-derived public key matches the server record.
+	derivedPub := base64.StdEncoding.EncodeToString(kp.PublicKey[:])
+	if derivedPub != meta.PublicKey {
+		return fmt.Errorf("derived public key does not match server record — possible data corruption")
+	}
+
+	cfg.PINSalt = meta.Salt
+	cfg.PublicKey = meta.PublicKey
+	cfg.PrivateKey = base64.StdEncoding.EncodeToString(kp.PrivateKey[:])
+
+	if err := config.Save(cfg); err != nil {
+		return fmt.Errorf("saving encryption keys: %w", err)
+	}
+
+	output.Current.PrintMessage("Encryption unlocked")
+	return nil
 }
 
 // openBrowser opens the default browser to the given URL

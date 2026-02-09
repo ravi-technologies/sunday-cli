@@ -21,6 +21,9 @@ type Config struct {
 	RefreshToken string    `json:"refresh_token"`
 	ExpiresAt    time.Time `json:"expires_at"`
 	UserEmail    string    `json:"user_email,omitempty"`
+	PINSalt      string    `json:"pin_salt,omitempty"`
+	PublicKey    string    `json:"public_key,omitempty"`
+	PrivateKey   string    `json:"private_key,omitempty"`
 }
 
 // ConfigPath returns the path to the config file (~/.sunday/config.json).

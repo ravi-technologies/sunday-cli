@@ -149,6 +149,15 @@ type APIError struct {
 	Detail string `json:"detail"`
 }
 
+// EncryptionMeta holds the user's E2E encryption metadata from the server.
+type EncryptionMeta struct {
+	ID               int    `json:"id"`
+	Salt             string `json:"salt"`
+	Verifier         string `json:"verifier"`
+	PublicKey        string `json:"public_key"`
+	ManagedMasterKey string `json:"managed_master_key"`
+}
+
 // SundayPhone represents the user's assigned Sunday phone number.
 type SundayPhone struct {
 	ID          int       `json:"id"`
