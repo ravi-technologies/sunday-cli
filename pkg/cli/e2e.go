@@ -20,7 +20,7 @@ func ensureKeyPair() (*crypto.KeyPair, error) {
 
 	if cfg.PrivateKey == "" || cfg.PublicKey == "" {
 		if cfg.AccessToken != "" {
-			return nil, fmt.Errorf("encryption not set up — complete PIN setup on the Sunday dashboard, then run `sunday auth login` to unlock")
+			return nil, fmt.Errorf("encryption not set up — complete PIN setup on the dashboard first")
 		}
 		return nil, fmt.Errorf("not authenticated — run `sunday auth login` first")
 	}
