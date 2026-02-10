@@ -143,6 +143,12 @@ type SMSMessage struct {
 	CreatedDt time.Time `json:"created_dt"`
 }
 
+// Owner represents the account owner's profile information.
+type Owner struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}
+
 // APIError represents an error response from the API, containing a human-readable
 // error message in the Detail field.
 type APIError struct {

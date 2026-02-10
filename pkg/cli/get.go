@@ -32,6 +32,26 @@ var getPhoneCmd = &cobra.Command{
 	},
 }
 
+var getOwnerCmd = &cobra.Command{
+	Use:   "owner",
+	Short: "Get account owner's name",
+	Long:  "Get the name of the account owner (the human who owns this Sunday account).",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := api.NewClient(nil)
+		if err != nil {
+			return err
+		}
+
+		owner, err := client.GetOwner()
+		if err != nil {
+			return err
+		}
+
+		output.Current.Print(owner)
+		return nil
+	},
+}
+
 var getEmailCmd = &cobra.Command{
 	Use:   "email",
 	Short: "Get your assigned email address",
@@ -53,6 +73,7 @@ var getEmailCmd = &cobra.Command{
 }
 
 func init() {
+	getCmd.AddCommand(getOwnerCmd)
 	getCmd.AddCommand(getPhoneCmd)
 	getCmd.AddCommand(getEmailCmd)
 	rootCmd.AddCommand(getCmd)

@@ -36,6 +36,16 @@ func (c *Client) GetEmail() (*SundayEmail, error) {
 	return &result[0], nil
 }
 
+// GetOwner fetches the account owner's profile information.
+func (c *Client) GetOwner() (*Owner, error) {
+	var result Owner
+	if err := c.doAuthenticatedRequest(http.MethodGet, PathOwner, nil, &result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
 // ListSMSMessages fetches all SMS messages (flat list, not grouped by conversation).
 func (c *Client) ListSMSMessages(unreadOnly bool) ([]SundayPhoneMessage, error) {
 	params := url.Values{}
