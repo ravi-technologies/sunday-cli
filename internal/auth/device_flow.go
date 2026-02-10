@@ -96,15 +96,24 @@ func (d *DeviceFlow) Run() error {
 				UserEmail:    tokenResp.User.Email,
 			}
 
-			if err := config.Save(cfg); err != nil {
-				return fmt.Errorf("failed to save tokens: %w", err)
-			}
-
 			output.Current.PrintMessage(fmt.Sprintf("Authenticated as %s", tokenResp.User.Email))
 
-			// Prompt for PIN to unlock E2E decryption for this session.
+			// Recreate client with the new tokens (in memory only)
+			// so authenticated requests work before we persist.
+			d.client, err = api.NewClient(cfg)
+			if err != nil {
+				return fmt.Errorf("failed to reinitialize client: %w", err)
+			}
+
+			// Prompt for PIN to unlock E2E decryption.
+			// If the user exits here (Ctrl+C), nothing is saved to disk.
 			if err := d.unlockEncryption(cfg); err != nil {
 				return fmt.Errorf("encryption unlock failed: %w", err)
+			}
+
+			// Save only after auth + PIN are both complete.
+			if err := config.Save(cfg); err != nil {
+				return fmt.Errorf("failed to save config: %w", err)
 			}
 
 			return nil
@@ -147,10 +156,6 @@ func (d *DeviceFlow) unlockEncryption(cfg *config.Config) error {
 	cfg.PINSalt = meta.Salt
 	cfg.PublicKey = meta.PublicKey
 	cfg.PrivateKey = base64.StdEncoding.EncodeToString(kp.PrivateKey[:])
-
-	if err := config.Save(cfg); err != nil {
-		return fmt.Errorf("saving encryption keys: %w", err)
-	}
 
 	output.Current.PrintMessage("Encryption unlocked")
 	return nil
