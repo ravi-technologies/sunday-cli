@@ -24,11 +24,13 @@ const EncryptedPrefix = "e2e::"
 // verifyPlaintext is the literal string encrypted inside the verifier.
 const verifyPlaintext = "sunday-e2e-verify"
 
-// Argon2id parameters -- must match backend and dashboard exactly.
+// Argon2id parameters -- must match libsodium's crypto_pwhash exactly.
+// libsodium hardcodes parallelism=1 internally; the caller only controls
+// opslimit (time) and memlimit (memory).
 const (
 	argon2Time    = 3
 	argon2Memory  = 64 * 1024 // 64 MB expressed in KiB (the Go argon2 API uses KiB)
-	argon2Threads = 4
+	argon2Threads = 1         // must be 1 to match libsodium's crypto_pwhash
 	argon2KeyLen  = 32
 )
 

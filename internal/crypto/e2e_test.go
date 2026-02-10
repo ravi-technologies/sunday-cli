@@ -581,7 +581,7 @@ func TestDeriveKeyPair_KnownTestVector(t *testing.T) {
 	// any accidental change to the Argon2id parameters or key derivation logic.
 	pin := "123456"
 	salt := make([]byte, 16)
-	expectedPubKeyHex := "584d44d2c4b7ebf636a528b1c18c42499d9590b4a9480759888c7d99a64c005d"
+	expectedPubKeyHex := "af57de06587002d4b87b7e94dc024b1502a3158cd6b1721390aa47d647df707a"
 
 	kp, err := DeriveKeyPair(pin, salt)
 	if err != nil {
