@@ -129,3 +129,29 @@ func CreateVerifier(kp *KeyPair) (string, error) {
 	}
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
+
+// Encrypt encrypts plaintext using NaCl SealedBox with the given public key.
+// Returns an "e2e::<base64>" string. Empty plaintext returns empty string.
+func Encrypt(plaintext string, publicKeyB64 string) (string, error) {
+	if plaintext == "" {
+		return "", nil
+	}
+
+	pubBytes, err := base64.StdEncoding.DecodeString(publicKeyB64)
+	if err != nil {
+		return "", fmt.Errorf("decoding public key: %w", err)
+	}
+	if len(pubBytes) != 32 {
+		return "", fmt.Errorf("public key has invalid length %d, expected 32", len(pubBytes))
+	}
+
+	var pubKey [32]byte
+	copy(pubKey[:], pubBytes)
+
+	ciphertext, err := box.SealAnonymous(nil, []byte(plaintext), &pubKey, rand.Reader)
+	if err != nil {
+		return "", fmt.Errorf("encrypting: %w", err)
+	}
+
+	return EncryptedPrefix + base64.StdEncoding.EncodeToString(ciphertext), nil
+}

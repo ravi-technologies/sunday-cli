@@ -12,7 +12,6 @@ import (
 
 	"github.com/ravi-technologies/sunday-cli/internal/config"
 	"github.com/ravi-technologies/sunday-cli/internal/output"
-	"github.com/ravi-technologies/sunday-cli/internal/version"
 	"github.com/spf13/cobra"
 )
 
@@ -42,19 +41,6 @@ func withTempHome(t *testing.T) (tmpDir string, cleanup func()) {
 	}
 
 	return tmpDir, cleanup
-}
-
-// withAPIBaseURL is a test helper that temporarily sets the API base URL
-// for testing commands that require API client initialization.
-func withAPIBaseURL(t *testing.T) func() {
-	t.Helper()
-
-	originalAPIBaseURL := version.APIBaseURL
-	version.APIBaseURL = "https://api.test.example.com"
-
-	return func() {
-		version.APIBaseURL = originalAPIBaseURL
-	}
 }
 
 // newTestAuthStatusCmd creates a fresh auth status command for testing.
@@ -122,7 +108,7 @@ func TestAuthStatus_NotAuthenticated(t *testing.T) {
 	defer cleanup()
 
 	// Verify config path is now in temp directory
-	path := config.ConfigPath()
+	path := config.Path()
 	if !strings.HasPrefix(path, tmpDir) {
 		t.Fatalf("ConfigPath() = %v, expected prefix %v", path, tmpDir)
 	}

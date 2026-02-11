@@ -3,11 +3,11 @@ package cli
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/ravi-technologies/sunday-cli/internal/api"
 	"github.com/ravi-technologies/sunday-cli/internal/auth"
 	"github.com/ravi-technologies/sunday-cli/internal/config"
 	"github.com/ravi-technologies/sunday-cli/internal/output"
+	"github.com/spf13/cobra"
 )
 
 var authCmd = &cobra.Command{
@@ -50,17 +50,16 @@ var statusCmd = &cobra.Command{
 		}
 
 		if client.IsAuthenticated() {
-			email := client.GetUserEmail()
-			if email != "" {
-				output.Current.Print(map[string]interface{}{
-					"authenticated": true,
-					"email":         email,
-				})
-			} else {
-				output.Current.Print(map[string]interface{}{
-					"authenticated": true,
-				})
+			result := map[string]interface{}{
+				"authenticated": true,
 			}
+			if email := client.GetUserEmail(); email != "" {
+				result["email"] = email
+			}
+			if identity := client.GetIdentityName(); identity != "" {
+				result["identity"] = identity
+			}
+			output.Current.Print(result)
 		} else {
 			output.Current.Print(map[string]interface{}{
 				"authenticated": false,

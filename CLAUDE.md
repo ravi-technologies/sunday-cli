@@ -11,6 +11,7 @@ Sunday CLI is a Go command-line client for the Sunday backend service. It provid
 - Receive OTPs and verification codes
 - Complete 2FA authentication flows
 - Read confirmation emails and SMS messages
+- Store and retrieve E2E-encrypted passwords per identity
 
 ## Using Sunday CLI as an AI Agent
 
@@ -44,6 +45,15 @@ sunday message sms --json              # List all SMS messages
 sunday message sms <message_id> --json # Get specific SMS by ID
 sunday message email --json            # List all email messages
 sunday message email <message_id> --json # Get specific email by ID
+
+# Password manager (E2E encrypted)
+sunday passwords list --json                     # List all entries
+sunday passwords get <uuid> --json               # Show entry (decrypted)
+sunday passwords create example.com              # Create (auto-generates password)
+sunday passwords create example.com --username me@email.com --password 'mypass'
+sunday passwords edit <uuid> --password 'new'    # Edit fields
+sunday passwords delete <uuid>                   # Delete entry
+sunday passwords generate --length 32            # Generate without storing
 ```
 
 ### Workflow: Signing Up for a Service
@@ -88,9 +98,10 @@ internal/
 ├── api/              # HTTP client and API types
 ├── auth/             # Device code flow orchestration
 ├── config/           # Token/config file management
+├── crypto/           # E2E encryption (Argon2id + NaCl SealedBox)
 ├── output/           # Human/JSON formatters
 └── version/          # Build-time version info
-pkg/cli/              # Cobra commands
+pkg/cli/              # Cobra commands (inbox, passwords, auth, etc.)
 ```
 
 ### Key Patterns
@@ -98,6 +109,7 @@ pkg/cli/              # Cobra commands
 - **Output formatting**: All commands support `--json` flag for AI agent consumption
 - **Token refresh**: API client automatically refreshes expired tokens
 - **Build-time config**: API URL injected via ldflags (no runtime config needed)
+- **E2E encryption**: `internal/crypto/` handles client-side encrypt/decrypt (Argon2id key derivation + NaCl SealedBox). Password fields are encrypted before API calls and decrypted after retrieval.
 
 ## Code Style
 

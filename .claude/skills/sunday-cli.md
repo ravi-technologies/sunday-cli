@@ -9,6 +9,7 @@ Sunday CLI provides AI agents with their own phone number and email address. You
 - Receive emails (including signup confirmations and verification links)
 - Use these credentials to sign up for websites and services
 - Authenticate to services that require phone/email verification
+- Store and retrieve E2E-encrypted passwords per identity
 
 ## Prerequisites
 
@@ -187,6 +188,43 @@ sunday inbox email <thread_id> --json | jq -r '.messages[].text_content'
 # Or extract OTP code from SMS
 sunday inbox sms <conversation_id> --json | jq -r '.messages[].body'
 ```
+
+### 5. Managing Passwords
+
+Store credentials for services you've signed up for:
+
+```bash
+# After signing up for a service, store the credentials
+sunday passwords create example.com --username "$EMAIL" --password 'the-password-used'
+
+# Or auto-generate a password during signup
+sunday passwords create example.com
+# Outputs: Generated password: xK9#mL2...  (use this in the signup form)
+
+# Retrieve stored credentials later
+sunday passwords list --json
+sunday passwords get <uuid> --json
+
+# Update a password
+sunday passwords edit <uuid> --password 'new-password'
+
+# Generate a password without storing it
+sunday passwords generate --length 24 --json | jq -r '.password'
+```
+
+**Note:** URL inputs are automatically cleaned to domains (e.g. `https://mail.google.com/inbox` → `google.com`). Username defaults to your identity email if not specified. Password is auto-generated if not provided.
+
+### Password Commands
+| Command | Description |
+|---------|-------------|
+| `sunday passwords list` | List all stored passwords |
+| `sunday passwords get <uuid>` | Show a stored password (decrypted) |
+| `sunday passwords create <domain>` | Create a new password entry |
+| `sunday passwords edit <uuid>` | Edit a stored password entry |
+| `sunday passwords delete <uuid>` | Delete a stored password entry |
+| `sunday passwords generate` | Generate a random password |
+
+**Create flags:** `--username`, `--password`, `--generate`, `--length` (default: 16), `--no-special`, `--no-digits`, `--exclude-chars`, `--notes`
 
 ## Troubleshooting
 

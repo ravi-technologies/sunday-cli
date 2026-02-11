@@ -214,7 +214,7 @@ func TestUpdateEncryptionMeta_ValidationError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(APIError{Detail: "Invalid salt format"})
+		json.NewEncoder(w).Encode(Error{Detail: "Invalid salt format"})
 	}))
 	defer server.Close()
 

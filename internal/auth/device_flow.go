@@ -1,10 +1,14 @@
 package auth
 
 import (
+	"bufio"
 	"encoding/base64"
 	"fmt"
+	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -105,13 +109,18 @@ func (d *DeviceFlow) Run() error {
 				return fmt.Errorf("failed to reinitialize client: %w", err)
 			}
 
+			// Select and bind an identity to this CLI session.
+			if err := d.selectAndBindIdentity(cfg); err != nil {
+				return fmt.Errorf("identity selection failed: %w", err)
+			}
+
 			// Prompt for PIN to unlock E2E decryption.
 			// If the user exits here (Ctrl+C), nothing is saved to disk.
 			if err := d.unlockEncryption(cfg); err != nil {
 				return fmt.Errorf("encryption unlock failed: %w", err)
 			}
 
-			// Save only after auth + PIN are both complete.
+			// Save only after auth + identity + PIN are all complete.
 			if err := config.Save(cfg); err != nil {
 				return fmt.Errorf("failed to save config: %w", err)
 			}
@@ -159,6 +168,83 @@ func (d *DeviceFlow) unlockEncryption(cfg *config.Config) error {
 
 	output.Current.PrintMessage("Encryption unlocked")
 	return nil
+}
+
+// selectAndBindIdentity lists the user's identities and binds the chosen one
+// to the JWT session. The identity is then locked into all future API calls.
+func (d *DeviceFlow) selectAndBindIdentity(cfg *config.Config) error {
+	identities, err := d.client.ListIdentities()
+	if err != nil {
+		return fmt.Errorf("listing identities: %w", err)
+	}
+
+	if len(identities) == 0 {
+		return fmt.Errorf("no identities found — complete setup on the dashboard first")
+	}
+
+	var selected api.Identity
+
+	if len(identities) == 1 {
+		selected = identities[0]
+		output.Current.PrintMessage(fmt.Sprintf("Using identity: %s", identityLabel(selected)))
+	} else {
+		fmt.Println("\nSelect an identity for this CLI session:")
+		for i, id := range identities {
+			fmt.Printf("  %d) %s\n", i+1, identityLabel(id))
+		}
+		fmt.Print("> ")
+
+		reader := bufio.NewReader(os.Stdin)
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("reading input: %w", err)
+		}
+		trimmed := strings.TrimSpace(line)
+		choice, err := strconv.Atoi(trimmed)
+		if err != nil {
+			return fmt.Errorf("invalid selection %q — enter a number between 1 and %d", trimmed, len(identities))
+		}
+		if choice < 1 || choice > len(identities) {
+			return fmt.Errorf("selection %d out of range — enter a number between 1 and %d", choice, len(identities))
+		}
+		selected = identities[choice-1]
+	}
+
+	// Bind the identity to the JWT.
+	bound, err := d.client.BindIdentity(selected.UUID)
+	if err != nil {
+		return fmt.Errorf("binding identity: %w", err)
+	}
+	if bound.Access == "" || bound.Refresh == "" {
+		return fmt.Errorf("binding identity: server returned empty tokens")
+	}
+
+	cfg.AccessToken = bound.Access
+	cfg.RefreshToken = bound.Refresh
+	cfg.ExpiresAt = time.Now().Add(api.TokenExpiryBuffer)
+	cfg.IdentityName = selected.Name
+
+	// Recreate client with the bound tokens.
+	d.client, err = api.NewClient(cfg)
+	if err != nil {
+		return fmt.Errorf("reinitializing client after bind: %w", err)
+	}
+
+	output.Current.PrintMessage(fmt.Sprintf("Bound to identity: %s", identityLabel(selected)))
+	return nil
+}
+
+// identityLabel returns a human-readable label for an identity
+// e.g. "Personal (user@sunday.app)" or just "Personal".
+func identityLabel(id api.Identity) string {
+	detail := id.SundayEmail
+	if detail == "" && id.SundayPhone != "" {
+		detail = id.SundayPhone
+	}
+	if detail != "" {
+		return fmt.Sprintf("%s (%s)", id.Name, detail)
+	}
+	return id.Name
 }
 
 // openBrowser opens the default browser to the given URL

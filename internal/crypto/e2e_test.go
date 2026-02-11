@@ -593,3 +593,97 @@ func TestDeriveKeyPair_KnownTestVector(t *testing.T) {
 		t.Errorf("public key mismatch\n  got:  %s\n  want: %s", gotHex, expectedPubKeyHex)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Encrypt
+// ---------------------------------------------------------------------------
+
+func TestEncrypt_Roundtrip(t *testing.T) {
+	kp := testKeyPair(t)
+	pubKeyB64 := base64.StdEncoding.EncodeToString(kp.PublicKey[:])
+
+	plaintext := "my secret password"
+	encrypted, err := Encrypt(plaintext, pubKeyB64)
+	if err != nil {
+		t.Fatalf("Encrypt: %v", err)
+	}
+
+	if !IsEncrypted(encrypted) {
+		t.Errorf("Encrypt result should have e2e:: prefix, got %q", encrypted)
+	}
+
+	// Decrypt and verify roundtrip
+	decrypted, err := DecryptField(encrypted, kp)
+	if err != nil {
+		t.Fatalf("DecryptField: %v", err)
+	}
+	if decrypted != plaintext {
+		t.Errorf("roundtrip = %q, want %q", decrypted, plaintext)
+	}
+}
+
+func TestEncrypt_EmptyString(t *testing.T) {
+	kp := testKeyPair(t)
+	pubKeyB64 := base64.StdEncoding.EncodeToString(kp.PublicKey[:])
+
+	result, err := Encrypt("", pubKeyB64)
+	if err != nil {
+		t.Fatalf("Encrypt empty: %v", err)
+	}
+	if result != "" {
+		t.Errorf("Encrypt(\"\") = %q, want empty string", result)
+	}
+}
+
+func TestEncrypt_InvalidPublicKey(t *testing.T) {
+	_, err := Encrypt("test", "not-valid-base64!!!")
+	if err == nil {
+		t.Error("Encrypt should return error for invalid base64 public key")
+	}
+}
+
+func TestEncrypt_WrongLengthPublicKey(t *testing.T) {
+	// 16 bytes instead of 32
+	shortKey := base64.StdEncoding.EncodeToString(make([]byte, 16))
+	_, err := Encrypt("test", shortKey)
+	if err == nil {
+		t.Error("Encrypt should return error for wrong-length public key")
+	}
+}
+
+func TestEncrypt_UnicodePlaintext(t *testing.T) {
+	kp := testKeyPair(t)
+	pubKeyB64 := base64.StdEncoding.EncodeToString(kp.PublicKey[:])
+
+	plaintext := "Mot de passe: \U0001f511 S3cr3t!"
+	encrypted, err := Encrypt(plaintext, pubKeyB64)
+	if err != nil {
+		t.Fatalf("Encrypt unicode: %v", err)
+	}
+
+	decrypted, err := DecryptField(encrypted, kp)
+	if err != nil {
+		t.Fatalf("DecryptField: %v", err)
+	}
+	if decrypted != plaintext {
+		t.Errorf("roundtrip = %q, want %q", decrypted, plaintext)
+	}
+}
+
+func TestEncrypt_DifferentCiphertextsEachCall(t *testing.T) {
+	kp := testKeyPair(t)
+	pubKeyB64 := base64.StdEncoding.EncodeToString(kp.PublicKey[:])
+
+	e1, err := Encrypt("same plaintext", pubKeyB64)
+	if err != nil {
+		t.Fatalf("Encrypt (1st): %v", err)
+	}
+	e2, err := Encrypt("same plaintext", pubKeyB64)
+	if err != nil {
+		t.Fatalf("Encrypt (2nd): %v", err)
+	}
+
+	if e1 == e2 {
+		t.Error("two Encrypt calls produced identical ciphertexts (expected ephemeral randomness)")
+	}
+}

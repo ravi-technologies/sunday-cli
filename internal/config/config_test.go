@@ -38,19 +38,19 @@ func withTempHome(t *testing.T) (tmpDir string, cleanup func()) {
 	return tmpDir, cleanup
 }
 
-// TestConfigPath verifies that ConfigPath returns a path ending with ~/.sunday/config.json
-func TestConfigPath(t *testing.T) {
-	path := ConfigPath()
+// TestPath verifies that Path returns a path ending with ~/.sunday/config.json
+func TestPath(t *testing.T) {
+	path := Path()
 
 	// Should end with .sunday/config.json
 	if filepath.Base(path) != "config.json" {
-		t.Errorf("ConfigPath() = %v, want ending with config.json", path)
+		t.Errorf("Path() = %v, want ending with config.json", path)
 	}
 
 	// Should contain .sunday directory
 	dir := filepath.Dir(path)
 	if filepath.Base(dir) != ".sunday" {
-		t.Errorf("ConfigPath() dir = %v, want ending with .sunday", dir)
+		t.Errorf("Path() dir = %v, want ending with .sunday", dir)
 	}
 
 	// Path should be absolute (starts with / on Unix or drive letter on Windows)
@@ -58,15 +58,15 @@ func TestConfigPath(t *testing.T) {
 	if err == nil {
 		// If we can get home dir, path should start with it
 		if !strings.HasPrefix(path, homeDir) {
-			t.Errorf("ConfigPath() = %v, want prefix %v", path, homeDir)
+			t.Errorf("Path() = %v, want prefix %v", path, homeDir)
 		}
 	}
 }
 
-// TestConfigPath_NoHomeDir tests the fallback behavior when home directory is unavailable.
+// TestPath_NoHomeDir tests the fallback behavior when home directory is unavailable.
 // Note: This is difficult to test directly since os.UserHomeDir() typically works.
 // We test the expected fallback path structure instead.
-func TestConfigPath_NoHomeDir(t *testing.T) {
+func TestPath_NoHomeDir(t *testing.T) {
 	// The fallback path would be "./.sunday/config.json"
 	// We verify this by checking the implementation's fallback behavior
 	fallbackPath := filepath.Join(".", ".sunday", "config.json")
@@ -92,9 +92,9 @@ func TestLoad_NoFile(t *testing.T) {
 	defer cleanup()
 
 	// Verify config path is now in temp directory
-	path := ConfigPath()
+	path := Path()
 	if !strings.HasPrefix(path, tmpDir) {
-		t.Fatalf("ConfigPath() = %v, expected prefix %v", path, tmpDir)
+		t.Fatalf("Path() = %v, expected prefix %v", path, tmpDir)
 	}
 
 	// File doesn't exist, Load should return empty config
@@ -571,17 +571,17 @@ func TestSave_Load_RoundTrip(t *testing.T) {
 // TestConfigConstants verifies the package constants are set correctly
 func TestConfigConstants(t *testing.T) {
 	// Verify constants through the path
-	path := ConfigPath()
+	path := Path()
 
 	// Should contain config.json
 	if filepath.Base(path) != configFileName {
-		t.Errorf("ConfigPath base = %v, want %v", filepath.Base(path), configFileName)
+		t.Errorf("Path base = %v, want %v", filepath.Base(path), configFileName)
 	}
 
 	// Parent should be .sunday
 	dir := filepath.Dir(path)
 	if filepath.Base(dir) != configDirName {
-		t.Errorf("ConfigPath dir = %v, want %v", filepath.Base(dir), configDirName)
+		t.Errorf("Path dir = %v, want %v", filepath.Base(dir), configDirName)
 	}
 
 	// Verify permission constants have expected values
@@ -593,9 +593,9 @@ func TestConfigConstants(t *testing.T) {
 	}
 }
 
-// TestConfigPath_Structure verifies the expected path structure
-func TestConfigPath_Structure(t *testing.T) {
-	path := ConfigPath()
+// TestPath_Structure verifies the expected path structure
+func TestPath_Structure(t *testing.T) {
+	path := Path()
 
 	// Verify the path has the expected components
 	parts := strings.Split(path, string(filepath.Separator))
@@ -614,9 +614,9 @@ func TestConfigPath_Structure(t *testing.T) {
 	}
 
 	if !foundSunday {
-		t.Errorf("ConfigPath() = %v, missing .sunday directory", path)
+		t.Errorf("Path() = %v, missing .sunday directory", path)
 	}
 	if !foundConfig {
-		t.Errorf("ConfigPath() = %v, missing config.json after .sunday", path)
+		t.Errorf("Path() = %v, missing config.json after .sunday", path)
 	}
 }

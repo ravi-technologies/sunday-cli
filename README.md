@@ -10,6 +10,7 @@ Sunday CLI enables AI agents to receive and read communications on dedicated pho
 - **Sign up for services** using the assigned phone number and email address
 - **Read incoming messages** from services, notifications, and confirmations
 - **Automate workflows** that require email/SMS verification
+- **Store and retrieve E2E-encrypted passwords** per identity
 
 Each agent gets their own dedicated inbox with:
 - A unique phone number for SMS
@@ -125,6 +126,19 @@ Download the latest release for your platform from the releases page.
 | `sunday message sms <message-id>` | View specific SMS message by ID |
 | `sunday message sms --unread` | List only unread SMS messages |
 
+### Passwords (E2E encrypted)
+
+| Command | Description |
+|---------|-------------|
+| `sunday passwords list` | List all stored passwords |
+| `sunday passwords get <uuid>` | Show a stored password (decrypted) |
+| `sunday passwords create <domain>` | Create a new entry (auto-generates password if not provided) |
+| `sunday passwords edit <uuid>` | Edit a stored password entry |
+| `sunday passwords delete <uuid>` | Delete a stored password entry |
+| `sunday passwords generate` | Generate a random password without storing |
+
+**Create flags:** `--username`, `--password`, `--generate`, `--length` (default: 16), `--no-special`, `--no-digits`, `--exclude-chars`, `--notes`
+
 ### Global Flags
 
 | Flag | Description |
@@ -223,9 +237,10 @@ sunday-cli/
 │   ├── api/           # HTTP client and API types
 │   ├── auth/          # OAuth device flow
 │   ├── config/        # Credential storage
+│   ├── crypto/        # E2E encryption (Argon2id + NaCl SealedBox)
 │   ├── output/        # Human/JSON formatters
 │   └── version/       # Build-time version info
-└── pkg/cli/           # Cobra command definitions
+└── pkg/cli/           # Cobra command definitions (inbox, passwords, auth)
 ```
 
 ## License

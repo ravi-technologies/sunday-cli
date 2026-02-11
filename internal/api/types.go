@@ -53,10 +53,11 @@ type RefreshRequest struct {
 	Refresh string `json:"refresh"`
 }
 
-// RefreshResponse contains the new access token returned after a successful
-// token refresh operation.
+// RefreshResponse contains the new access token (and optionally a rotated
+// refresh token) returned after a successful token refresh operation.
 type RefreshResponse struct {
-	Access string `json:"access"`
+	Access  string `json:"access"`
+	Refresh string `json:"refresh,omitempty"`
 }
 
 // InboxMessage represents a unified inbox item that can be either an SMS or email message.
@@ -149,9 +150,9 @@ type Owner struct {
 	LastName  string `json:"last_name"`
 }
 
-// APIError represents an error response from the API, containing a human-readable
+// Error represents an error response from the API, containing a human-readable
 // error message in the Detail field.
-type APIError struct {
+type Error struct {
 	Detail string `json:"detail"`
 }
 
@@ -208,4 +209,54 @@ type SundayEmailMessage struct {
 	MessageID   string    `json:"message_id"`
 	ThreadID    string    `json:"thread_id"`
 	CreatedDt   time.Time `json:"created_dt"`
+}
+
+// PasswordEntry represents a stored website credential.
+type PasswordEntry struct {
+	UUID      string `json:"uuid"`
+	Identity  int    `json:"identity"`
+	Domain    string `json:"domain"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	Notes     string `json:"notes"`
+	CreatedDt string `json:"created_dt"`
+	UpdatedDt string `json:"updated_dt"`
+}
+
+// GeneratedPassword is the response from the password generator endpoint.
+type GeneratedPassword struct {
+	Password string `json:"password"`
+}
+
+// PasswordGenOpts holds query parameters for the password generator.
+// The No* fields disable specific character categories. The zero value
+// means all categories are enabled (server defaults apply).
+type PasswordGenOpts struct {
+	Length       int
+	NoUppercase  bool
+	NoLowercase  bool
+	NoDigits     bool
+	NoSpecial    bool
+	ExcludeChars string
+}
+
+// Identity represents a user's named identity grouping (email + phone).
+type Identity struct {
+	UUID        string `json:"uuid"`
+	Name        string `json:"name"`
+	SundayEmail string `json:"sunday_email"`
+	SundayPhone string `json:"sunday_phone"`
+	CreatedDt   string `json:"created_dt"`
+	UpdatedDt   string `json:"updated_dt"`
+}
+
+// BindIdentityRequest is the request body for binding an identity to a JWT session.
+type BindIdentityRequest struct {
+	Identity string `json:"identity"`
+}
+
+// BindIdentityResponse contains the new token pair after binding an identity.
+type BindIdentityResponse struct {
+	Access  string `json:"access"`
+	Refresh string `json:"refresh"`
 }

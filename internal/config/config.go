@@ -21,13 +21,14 @@ type Config struct {
 	RefreshToken string    `json:"refresh_token"`
 	ExpiresAt    time.Time `json:"expires_at"`
 	UserEmail    string    `json:"user_email,omitempty"`
+	IdentityName string    `json:"identity_name,omitempty"`
 	PINSalt      string    `json:"pin_salt,omitempty"`
 	PublicKey    string    `json:"public_key,omitempty"`
 	PrivateKey   string    `json:"private_key,omitempty"`
 }
 
-// ConfigPath returns the path to the config file (~/.sunday/config.json).
-func ConfigPath() string {
+// Path returns the path to the config file (~/.sunday/config.json).
+func Path() string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		// Fall back to current directory if home dir unavailable
@@ -38,7 +39,7 @@ func ConfigPath() string {
 
 // Load reads the config from disk. Returns an empty config if the file doesn't exist.
 func Load() (*Config, error) {
-	path := ConfigPath()
+	path := Path()
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -58,7 +59,7 @@ func Load() (*Config, error) {
 
 // Save writes the config to disk, creating the directory if needed.
 func Save(cfg *Config) error {
-	path := ConfigPath()
+	path := Path()
 	dir := filepath.Dir(path)
 
 	// Create config directory with restricted permissions
@@ -80,7 +81,7 @@ func Save(cfg *Config) error {
 
 // Clear deletes the config file. Returns nil if the file doesn't exist.
 func Clear() error {
-	path := ConfigPath()
+	path := Path()
 
 	if err := os.Remove(path); err != nil {
 		if os.IsNotExist(err) {

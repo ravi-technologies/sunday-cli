@@ -107,7 +107,7 @@ func (c *Client) parseResponse(resp *http.Response, result interface{}) error {
 	}
 
 	if resp.StatusCode >= 400 {
-		var apiErr APIError
+		var apiErr Error
 		if json.Unmarshal(bodyBytes, &apiErr) == nil && apiErr.Detail != "" {
 			return fmt.Errorf("API error: %s", apiErr.Detail)
 		}
@@ -139,6 +139,9 @@ func (c *Client) RefreshAccessToken() error {
 	}
 
 	c.config.AccessToken = result.Access
+	if result.Refresh != "" {
+		c.config.RefreshToken = result.Refresh
+	}
 	c.config.ExpiresAt = time.Now().Add(TokenExpiryBuffer) // Assume 5 min expiry, refresh at 4
 
 	return config.Save(c.config)
@@ -152,6 +155,11 @@ func (c *Client) IsAuthenticated() bool {
 // GetUserEmail returns the stored user email
 func (c *Client) GetUserEmail() string {
 	return c.config.UserEmail
+}
+
+// GetIdentityName returns the stored identity name (empty if unbound)
+func (c *Client) GetIdentityName() string {
+	return c.config.IdentityName
 }
 
 // BuildURL builds a full URL with query parameters

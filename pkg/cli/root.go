@@ -1,9 +1,9 @@
 package cli
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/ravi-technologies/sunday-cli/internal/output"
 	"github.com/ravi-technologies/sunday-cli/internal/version"
+	"github.com/spf13/cobra"
 )
 
 var (

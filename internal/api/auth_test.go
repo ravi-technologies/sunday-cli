@@ -100,7 +100,7 @@ func TestRequestDeviceCode_Error(t *testing.T) {
 		// Return error response
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		response := APIError{
+		response := Error{
 			Detail: "Internal server error",
 		}
 		json.NewEncoder(w).Encode(response)

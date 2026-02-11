@@ -195,10 +195,10 @@ func TestListInbox_DirectionFilter(t *testing.T) {
 // TestListInbox_UnreadFilter verifies that ListInbox correctly filters by unread status.
 func TestListInbox_UnreadFilter(t *testing.T) {
 	testCases := []struct {
-		name           string
-		unreadOnly     bool
-		expectIsRead   bool
-		expectNoParam  bool
+		name          string
+		unreadOnly    bool
+		expectIsRead  bool
+		expectNoParam bool
 	}{
 		{
 			name:          "unread only filter",
@@ -510,7 +510,7 @@ func TestGetEmailThread_NotFound(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(APIError{Detail: "Thread not found"})
+		json.NewEncoder(w).Encode(Error{Detail: "Thread not found"})
 	}))
 	defer server.Close()
 
@@ -727,7 +727,7 @@ func TestGetSMSConversation_NotFound(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(APIError{Detail: "Conversation not found"})
+		json.NewEncoder(w).Encode(Error{Detail: "Conversation not found"})
 	}))
 	defer server.Close()
 

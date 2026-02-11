@@ -340,7 +340,7 @@ func TestParseResponse_Error400(t *testing.T) {
 	}{
 		{
 			name: "with detail field",
-			responseBody: APIError{
+			responseBody: Error{
 				Detail: "Invalid request parameters",
 			},
 			wantContains: "Invalid request parameters",
@@ -511,7 +511,7 @@ func TestRefreshAccessToken_Failure(t *testing.T) {
 		{
 			name:       "invalid refresh token",
 			statusCode: http.StatusUnauthorized,
-			responseBody: APIError{
+			responseBody: Error{
 				Detail: "Token is invalid or expired",
 			},
 			wantErrContain: "Token is invalid or expired",
@@ -652,7 +652,7 @@ func TestDoAuthenticatedRequest_401Retry(t *testing.T) {
 					t.Errorf("First request auth = %v, want Bearer original-access-token", authHeader)
 				}
 				w.WriteHeader(http.StatusUnauthorized)
-				json.NewEncoder(w).Encode(APIError{Detail: "Token expired"})
+				json.NewEncoder(w).Encode(Error{Detail: "Token expired"})
 				return
 			}
 
@@ -1004,7 +1004,7 @@ func TestDoAuthenticatedRequest_NoRefreshToken(t *testing.T) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(APIError{Detail: "Token expired"})
+		json.NewEncoder(w).Encode(Error{Detail: "Token expired"})
 	}))
 	defer server.Close()
 
