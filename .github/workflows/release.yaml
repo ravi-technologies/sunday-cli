@@ -1,0 +1,152 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 0.1.0)'
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  API_URL: https://sunday.ravi.app
+  HOMEBREW_TAP_REPO: ravi-technologies/homebrew-tap
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Get version
+        id: version
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ -n "$INPUT_VERSION" ]; then
+            echo "version=${INPUT_VERSION}" >> "$GITHUB_OUTPUT"
+            echo "tag=v${INPUT_VERSION}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${REF_NAME#v}" >> "$GITHUB_OUTPUT"
+            echo "tag=${REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Build binaries
+        env:
+          VERSION_TAG: ${{ steps.version.outputs.tag }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          MODULE="github.com/ravi-technologies/sunday-cli"
+          BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          LDFLAGS="-X '${MODULE}/internal/version.Version=${VERSION_TAG}' \
+                   -X '${MODULE}/internal/version.Commit=${COMMIT_SHA}' \
+                   -X '${MODULE}/internal/version.BuildDate=${BUILD_DATE}' \
+                   -X '${MODULE}/internal/version.APIBaseURL=${API_URL}'"
+
+          mkdir -p dist
+          for platform in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64; do
+            GOOS="${platform%/*}"
+            GOARCH="${platform#*/}"
+            echo "Building sunday-${GOOS}-${GOARCH}..."
+            CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build -ldflags "$LDFLAGS" \
+              -o "dist/sunday-${GOOS}-${GOARCH}/sunday" ./cmd/sunday
+          done
+
+      - name: Create archives and checksums
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        working-directory: dist
+        run: |
+          for dir in sunday-*/; do
+            name="${dir%/}"
+            archive="sunday-${VERSION}-${name#sunday-}.tar.gz"
+            tar -czf "$archive" -C "$name" sunday
+            sha256sum "$archive" >> checksums.txt
+          done
+          cat checksums.txt
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          gh release create "$TAG" \
+            --title "sunday v${VERSION}" \
+            --generate-notes \
+            dist/sunday-${VERSION}-*.tar.gz \
+            dist/checksums.txt
+
+      - name: Update Homebrew formula
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          SHA_DARWIN_ARM64=$(grep "darwin-arm64" dist/checksums.txt | awk '{print $1}')
+          SHA_DARWIN_AMD64=$(grep "darwin-amd64" dist/checksums.txt | awk '{print $1}')
+          SHA_LINUX_ARM64=$(grep "linux-arm64" dist/checksums.txt | awk '{print $1}')
+          SHA_LINUX_AMD64=$(grep "linux-amd64" dist/checksums.txt | awk '{print $1}')
+
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/${HOMEBREW_TAP_REPO}.git" tap
+          cd tap
+
+          cat > Formula/sunday.rb <<FORMULA
+          class Sunday < Formula
+            desc "CLI for AI agents to access email, SMS, and passwords via Sunday"
+            homepage "https://github.com/ravi-technologies/sunday-cli"
+            version "${VERSION}"
+            license "Proprietary"
+
+            on_macos do
+              on_arm do
+                url "https://github.com/ravi-technologies/sunday-cli/releases/download/v#{version}/sunday-#{version}-darwin-arm64.tar.gz"
+                sha256 "${SHA_DARWIN_ARM64}"
+              end
+              on_intel do
+                url "https://github.com/ravi-technologies/sunday-cli/releases/download/v#{version}/sunday-#{version}-darwin-amd64.tar.gz"
+                sha256 "${SHA_DARWIN_AMD64}"
+              end
+            end
+
+            on_linux do
+              on_arm do
+                url "https://github.com/ravi-technologies/sunday-cli/releases/download/v#{version}/sunday-#{version}-linux-arm64.tar.gz"
+                sha256 "${SHA_LINUX_ARM64}"
+              end
+              on_intel do
+                url "https://github.com/ravi-technologies/sunday-cli/releases/download/v#{version}/sunday-#{version}-linux-amd64.tar.gz"
+                sha256 "${SHA_LINUX_AMD64}"
+              end
+            end
+
+            def install
+              bin.install "sunday"
+            end
+
+            test do
+              assert_match "sunday version", shell_output("#{bin}/sunday version")
+            end
+          end
+          FORMULA
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/sunday.rb
+          git commit -m "sunday ${VERSION}"
+          git push
