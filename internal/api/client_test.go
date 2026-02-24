@@ -578,7 +578,7 @@ func TestDoAuthenticatedRequest_AutoRefresh(t *testing.T) {
 			json.NewEncoder(w).Encode(RefreshResponse{
 				Access: newAccessToken,
 			})
-		case "/api/v1/protected":
+		case "/api/protected":
 			lastAuthHeader = r.Header.Get("Authorization")
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -607,7 +607,7 @@ func TestDoAuthenticatedRequest_AutoRefresh(t *testing.T) {
 	}
 
 	var result map[string]string
-	err = client.doAuthenticatedRequest(http.MethodGet, "/api/v1/protected", nil, &result)
+	err = client.doAuthenticatedRequest(http.MethodGet, "/api/protected", nil, &result)
 	if err != nil {
 		t.Fatalf("doAuthenticatedRequest() error = %v", err)
 	}
@@ -642,7 +642,7 @@ func TestDoAuthenticatedRequest_401Retry(t *testing.T) {
 			json.NewEncoder(w).Encode(RefreshResponse{
 				Access: newAccessToken,
 			})
-		case "/api/v1/protected":
+		case "/api/protected":
 			requestCount++
 			authHeader := r.Header.Get("Authorization")
 
@@ -687,7 +687,7 @@ func TestDoAuthenticatedRequest_401Retry(t *testing.T) {
 	}
 
 	var result map[string]string
-	err = client.doAuthenticatedRequest(http.MethodGet, "/api/v1/protected", nil, &result)
+	err = client.doAuthenticatedRequest(http.MethodGet, "/api/protected", nil, &result)
 	if err != nil {
 		t.Fatalf("doAuthenticatedRequest() error = %v", err)
 	}
@@ -808,15 +808,15 @@ func TestBuildURL(t *testing.T) {
 	}{
 		{
 			name:     "no params",
-			path:     "/api/v1/inbox",
+			path:     "/api/inbox",
 			params:   nil,
-			wantPath: server.URL + "/api/v1/inbox",
+			wantPath: server.URL + "/api/inbox",
 		},
 		{
 			name:     "single param",
-			path:     "/api/v1/inbox",
+			path:     "/api/inbox",
 			params:   map[string]string{"page": "1"},
-			wantPath: server.URL + "/api/v1/inbox?page=1",
+			wantPath: server.URL + "/api/inbox?page=1",
 		},
 	}
 
@@ -1023,7 +1023,7 @@ func TestDoAuthenticatedRequest_NoRefreshToken(t *testing.T) {
 	}
 
 	var result map[string]interface{}
-	err = client.doAuthenticatedRequest(http.MethodGet, "/api/v1/protected", nil, &result)
+	err = client.doAuthenticatedRequest(http.MethodGet, "/api/protected", nil, &result)
 
 	// Should return 401 error without attempting refresh
 	if err == nil {

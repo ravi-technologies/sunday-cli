@@ -61,7 +61,7 @@ type RefreshResponse struct {
 }
 
 // InboxMessage represents a unified inbox item that can be either an SMS or email message.
-// It provides a common structure for displaying messages from the /api/v1/inbox/ endpoint.
+// It provides a common structure for displaying messages from the /api/inbox/ endpoint.
 type InboxMessage struct {
 	ID          int       `json:"id"`
 	Type        string    `json:"type"` // "sms" or "email"
@@ -74,7 +74,7 @@ type InboxMessage struct {
 	CreatedDt   time.Time `json:"created_dt"`
 }
 
-// EmailThread represents an email conversation thread summary from the /api/v1/email-inbox/ endpoint.
+// EmailThread represents an email conversation thread summary from the /api/email-inbox/ endpoint.
 // It contains metadata about the thread including message counts and timestamps.
 type EmailThread struct {
 	ThreadID        string    `json:"thread_id"`
@@ -112,7 +112,7 @@ type EmailMessage struct {
 	CreatedDt   time.Time `json:"created_dt"`
 }
 
-// SMSConversation represents an SMS conversation summary from the /api/v1/sms-inbox/ endpoint.
+// SMSConversation represents an SMS conversation summary from the /api/sms-inbox/ endpoint.
 // It groups messages between a Sunday phone number and an external number.
 type SMSConversation struct {
 	ConversationID    string    `json:"conversation_id"`
@@ -214,7 +214,7 @@ type SundayEmailMessage struct {
 // PasswordEntry represents a stored website credential.
 type PasswordEntry struct {
 	UUID      string `json:"uuid"`
-	Identity  int    `json:"identity"`
+	Identity  int    `json:"identity,omitempty"`
 	Domain    string `json:"domain"`
 	Username  string `json:"username"`
 	Password  string `json:"password"`
