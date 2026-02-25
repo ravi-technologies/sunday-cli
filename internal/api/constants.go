@@ -13,7 +13,6 @@ const (
 	PathDeviceCode    = "/api/auth/device/"
 	PathDeviceToken   = "/api/auth/device/token/"
 	PathTokenRefresh  = "/api/auth/token/refresh/"
-	PathInbox         = "/api/inbox/"
 	PathEmailInbox    = "/api/email-inbox/"
 	PathSMSInbox      = "/api/sms-inbox/"
 	PathPhone         = "/api/phone/"
@@ -22,7 +21,7 @@ const (
 	PathEmailMessages = "/api/email-messages/"
 	PathEncryption    = "/api/encryption/"
 	PathOwner         = "/api/me/"
-	PathPasswords     = "/api/passwords/"
+	PathVault         = "/api/vault/"
 	PathIdentities    = "/api/identities/"
 	PathBindIdentity  = "/api/auth/bind-identity/"
 )

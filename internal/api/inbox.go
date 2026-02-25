@@ -5,32 +5,6 @@ import (
 	"net/url"
 )
 
-// ListInbox fetches the unified inbox
-func (c *Client) ListInbox(msgType, direction string, unreadOnly bool) ([]InboxMessage, error) {
-	params := url.Values{}
-	if msgType != "" {
-		params.Set("type", msgType)
-	}
-	if direction != "" {
-		params.Set("direction", direction)
-	}
-	if unreadOnly {
-		params.Set("is_read", "false")
-	}
-
-	path := PathInbox
-	if len(params) > 0 {
-		path += "?" + params.Encode()
-	}
-
-	var result []InboxMessage
-	if err := c.doAuthenticatedRequest(http.MethodGet, path, nil, &result); err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
 // ListEmailThreads fetches email threads
 func (c *Client) ListEmailThreads(unreadOnly bool) ([]EmailThread, error) {
 	params := url.Values{}

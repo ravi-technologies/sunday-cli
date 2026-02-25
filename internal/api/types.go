@@ -60,20 +60,6 @@ type RefreshResponse struct {
 	Refresh string `json:"refresh,omitempty"`
 }
 
-// InboxMessage represents a unified inbox item that can be either an SMS or email message.
-// It provides a common structure for displaying messages from the /api/inbox/ endpoint.
-type InboxMessage struct {
-	ID          int       `json:"id"`
-	Type        string    `json:"type"` // "sms" or "email"
-	FromAddress string    `json:"from_address"`
-	ToAddress   string    `json:"to_address"`
-	Subject     string    `json:"subject"`
-	Body        string    `json:"body"`
-	Direction   string    `json:"direction"`
-	IsRead      bool      `json:"is_read"`
-	CreatedDt   time.Time `json:"created_dt"`
-}
-
 // EmailThread represents an email conversation thread summary from the /api/email-inbox/ endpoint.
 // It contains metadata about the thread including message counts and timestamps.
 type EmailThread struct {

@@ -62,6 +62,16 @@ func setupTestConfig(t *testing.T, cfg *config.Config) {
 	}
 }
 
+// newTestClient creates a Client wired to the given httptest server URL.
+// Used by inbox_test.go and passwords_test.go for quick test setup.
+func newTestClient(serverURL string) *Client {
+	return &Client{
+		httpClient: &http.Client{Timeout: 5 * time.Second},
+		baseURL:    strings.TrimSuffix(serverURL, "/"),
+		config:     &config.Config{AccessToken: "test-token"},
+	}
+}
+
 // TestNewClient_Success verifies that NewClient creates a client with the provided config.
 func TestNewClient_Success(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
